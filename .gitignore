@@ -1,0 +1,10 @@
+bin
+develop-eggs
+eggs
+include
+lib
+parts
+.idea/workspace.xml
+.installed.cfg
+*.pyc
+*.egg-info*
