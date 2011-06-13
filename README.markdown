@@ -10,7 +10,7 @@ All tools are described below. A sample configuration file can be found in confi
 
 Installation
 ============
-Download the .tar.gz file and install it with superuser priviledges, or in a virtual environment.
+Download the .tar.gz file and install it with superuser privileges, or in a virtual environment.
 
 For example:
 
@@ -38,7 +38,7 @@ backup. Command line switches indicate which of the two are done.
 
 In case the data directory copy is done, a check in the PostgreSQL configuration is done to check that the wal archive tool
 is configured correctly. If not, changes are suggested. Normally in this scenario the pg_backup_wal_s3 tool is used as
-archiver. Also pg_start_backup and pg_stop_backup are done. A lockfile will be used to prevent two backups happening at
+archiver. Also pg_start_backup and pg_stop_backup are done. A lock file will be used to prevent two backups happening at
 the same time.
 
 pg_restore_s3
