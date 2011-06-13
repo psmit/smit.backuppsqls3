@@ -8,6 +8,27 @@ strategy, but also just pg_dumps can be used.
 All tools are described below. A sample configuration file can be found in config/backuppsqls3.conf.sample, but also all
  options can be given on the command line.
 
+Installation
+============
+Download the .tar.gz file and install it with superuser priviledges, or in a virtual environment.
+
+For example:
+
+    sudo pip install smit.backuppsqls3-0.0.1.tar.gz
+
+or
+
+    virtualenv --no-site-packages backuppsqls3
+    cd backuppsqls3
+    bin/pip install smit.backuppsqls3-0.0.1.tar.gz
+
+
+Also the tar can be unpacked and the setup.py invoked
+
+    tar -zxvf smit.backuppsqls3-0.0.1.tar.gz
+    cd smit.backuppsqls3-0.0.1
+    sudo python setup.py install
+    
 
 pg_backup_s3
 ------------
