@@ -1,0 +1,21 @@
+# Copy this file to /etc/backuppsqls3.conf or /home/postgres/.backuppsqls3.conf (if the user that is running the scripts
+# is called postgres). This file can also be given with the -c (--config) parameter to any of the scripts.
+
+# The commented lines below show default values
+
+#[s3credentials]
+#bucket =
+#prefix = /
+#access_key =
+#secret_key =
+
+# Different credentials can be used for the restore /rotate tools (so that the backup user only needs write credentials)
+#[s3credentials_restore] #optional
+#aws_access_key =
+#aws_secret_key =
+
+[pg_config]
+#user =
+#password =
+#postgresql_conf =
+
