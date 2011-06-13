@@ -3,6 +3,19 @@
 
 # The commented lines below show default values
 
+[general]
+bucket =
+prefix =
+access_key =
+secret_key =
+
+# The following tool specific sections can be used to override the general section
+#[backup_wal]
+
+# Tip, use example different access keys with read priviledge for restoring
+#[restore_wal]
+
+
 #[s3credentials]
 #bucket =
 #prefix = /
@@ -14,7 +27,7 @@
 #aws_access_key =
 #aws_secret_key =
 
-[pg_config]
+#[pg_config]
 #user =
 #password =
 #postgresql_conf =

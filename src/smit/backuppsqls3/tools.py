@@ -1,12 +1,11 @@
-from optparse import OptionParser
-from ConfigParser import SafeConfigParser
-
-from os.path import expanduser
-
 from boto import connect_s3
+from ConfigParser import SafeConfigParser
+from optparse import OptionParser
+from os.path import expanduser
+from sys import stderr
 
-def backup_wal():
-    usage = "usage: %prog [options] source_file file_name"
+def get_wal_config(tool,usage):
+
     parser = OptionParser(usage=usage)
     parser.add_option("-c", "--config", dest="config", default="", help="Configuration file")
     parser.add_option("-b", "--bucket", dest="bucket", help="S3 Bucket")
@@ -20,27 +19,45 @@ def backup_wal():
         parser.print_usage()
         exit(1)
 
-    source_file,file_name = args
-
     config = {'bucket': '', 'prefix': '', 'access_key': '', 'secret_key': ''}
 
-    #if options.has_key('config'):
     conf_parse = SafeConfigParser(config)
     conf_parse.read(['/etc/backuppsqls3.conf',expanduser('~/.backuppsqls3.conf'),options.config])
-    
-    if conf_parse.has_section('s3credentials'):
-        for opt in config.keys():
-            if conf_parse.has_option('s3credentials',opt):
-                config[opt] = conf_parse.get('s3credentials',opt)
 
-            if getattr(options, opt) is not None:
-                config[opt] = getattr(options, opt)
+    for section in ["general", tool]:
+        if conf_parse.has_section(section):
+            for opt in config.keys():
+                if conf_parse.has_option(section,opt):
+                    config[opt] = conf_parse.get(section,opt)
+
+                if getattr(options, opt) is not None:
+                    config[opt] = getattr(options, opt)
+
+    return config, args
+
+
+def backup_wal():
+    config, args = get_wal_config("backup_wal", "usage: %prog [options] source_file file_name")
+    source_file,file_name = args
 
     conn = connect_s3(config['access_key'], config['secret_key'])
     bucket = conn.get_bucket(config['bucket'])
     key = bucket.new_key(config['prefix']+file_name)
     key.set_contents_from_filename(source_file)
 
+def restore_wal():
+    config, args = get_wal_config("restore_wal", "usage: %prog [options] source_file target_path")
+    source_file,target_path = args
+
+    conn = connect_s3(config['access_key'], config['secret_key'])
+    bucket = conn.get_bucket(config['bucket'])
+
+    key = bucket.get_key(config['prefix']+source_file)
+    if key is not None:
+        key.get_contents_to_filename(target_path)
+    else:
+        print >> stderr, "File not found"
+        exit(1)
 
 def run():
     pass

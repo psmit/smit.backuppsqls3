@@ -20,6 +20,6 @@ setup(name='smit.backuppsqls3',
         'pg_backup_s3 = smit.backuppsqls3.tools:run',
         'pg_backup_wal_s3 = smit.backuppsqls3.tools:backup_wal',
         'pg_restore_s3 = smit.backuppsqls3.tools:run',
-        'pg_restore_wal_s3 = smit.backuppsqls3.tools:run'
+        'pg_restore_wal_s3 = smit.backuppsqls3.tools:restore_wal'
         ])
       )
