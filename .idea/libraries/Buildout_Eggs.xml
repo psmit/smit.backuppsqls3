@@ -1,7 +1,10 @@
 <component name="libraryTable">
   <library name="Buildout Eggs">
     <CLASSES>
-      <root url="file://$PROJECT_DIR$/eggs/boto-2.0rc1-py2.6.egg" />
+      <root url="file://$PROJECT_DIR$/eggs/zc.lockfile-1.0.0-py2.7.egg" />
+      <root url="file://$PROJECT_DIR$/eggs/psycopg2-2.4.2-py2.7-linux-x86_64.egg" />
+      <root url="file://$PROJECT_DIR$/eggs/boto-2.0rc1-py2.7.egg" />
+      <root url="file://$PROJECT_DIR$/eggs/distribute-0.6.19-py2.7.egg" />
     </CLASSES>
     <SOURCES />
   </library>
