@@ -1,9 +1,11 @@
 import tarfile
 from gzip import GzipFile
+from subprocess import  call
 from boto import connect_s3
 from ConfigParser import SafeConfigParser, RawConfigParser
 from datetime import datetime
 from optparse import OptionParser
+import os
 from os.path import expanduser
 from os import unlink, fdopen
 from psycopg2 import connect
@@ -80,9 +82,17 @@ def restore_wal():
     conn = connect_s3(config['access_key'], config['secret_key'])
     bucket = conn.get_bucket(config['bucket'])
 
-    key = bucket.get_key(config['prefix']+source_file)
+    key = bucket.get_key(config['prefix']+source_file+".gz")
     if key is not None:
-        key.get_contents_to_filename(target_path)
+        fi,t_file_name = mkstemp()
+        os.close(fi)
+        key.get_contents_to_filename(t_file_name)
+        gzf = GzipFile(t_file_name,'r')
+        a = open(target_path,'w')
+        a.write(gzf.read())
+        a.close()
+        gzf.close()
+        unlink(t_file_name)
     else:
         print >> stderr, "File not found"
         exit(1)
@@ -94,7 +104,7 @@ def backup():
     add_s3_options_to_parser(parser)
     parser.add_option("-l", "--lock-file", dest='lock_file', default='/tmp/backuppsqls3.lock')
     parser.add_option("--dump", dest="do_dump", default=False, action="store_true", help="Perform dump")
-    parser.add_option("--dump-databases", dest="databases", default="ALL", help="Which databases to backup when a dump is done")
+#    parser.add_option("--dump-databases", dest="databases", default="ALL", help="Which databases to backup when a dump is done")
     parser.add_option("--base-backup", dest="do_base_backup", default=False, action="store_true", help="Perform base backup for PITR and check configuration")
     parser.add_option("--postgresql-conf", dest="postgresql_conf", help="PostgreSQL configuration file (used for base backup)")
     parser.add_option("--postgresql-user", dest="postgresql_user", help="PostgreSQL super user (default: current system user)")
@@ -112,7 +122,10 @@ def backup():
     config['lock_file'] = options.lock_file
     config['data_dir'] = postgres_conf.get(sec,'data_directory').replace('\'','').split('#')[0].strip()
 
-    _do_base_backup(config)
+    if options.do_base_backup:
+        _do_base_backup(config)
+    if options.do_dump:
+        _do_dump_backup(config)
 
 
 def _read_postgres_config(config_file):
@@ -149,19 +162,47 @@ def _do_base_backup(config):
     fi,file_name = mkstemp()
     fp = fdopen(fi,'w')
     tar_f = tarfile.open(fileobj=fp,mode='w:gz')
-    tar_f.add(config['data_dir'],arcname="data",exclude=lambda x: '/pg_xlog' in x)
+    tar_f.add(config['data_dir'],arcname="",exclude=lambda x: '/pg_xlog' in x)
     tar_f.close()
     fp.close()
 
 
     conn = connect_s3(config['access_key'], config['secret_key'])
     bucket = conn.get_bucket(config['bucket'])
-    key = bucket.new_key(config['prefix']+label+".tar.gz")
+    key = bucket.new_key(config['prefix']+"base_"+label+".tar.gz")
     key.set_contents_from_filename(file_name)
 
     unlink(file_name)
     cur.execute("SELECT pg_stop_backup();")
     lock.close()
+
+def _do_dump_backup(config):
+    label = datetime.now().strftime("%Y%m%d%H%M%S")
+
+    fi,file_name = mkstemp()
+    fp = fdopen(fi,'w')
+
+    if call(["pg_dumpall"], stdout=fp) is not 0:
+        print >> stderr, "Dump failed"
+        exit(1)
+    fp.close()
+
+
+    fi2,file_name2 = mkstemp()
+
+    f_in = open(file_name, 'rb')
+    f_out = GzipFile(file_name2, 'wb')
+    f_out.writelines(f_in)
+    f_out.close()
+    f_in.close()
+
+    conn = connect_s3(config['access_key'], config['secret_key'])
+    bucket = conn.get_bucket(config['bucket'])
+    key = bucket.new_key(config['prefix']+"dump_"+label+".gz")
+    key.set_contents_from_filename(file_name2)
+
+    unlink(file_name)
+    unlink(file_name2)
 
 def run():
     pass
